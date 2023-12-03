@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.huicheng.shop.dao.OrdersMapper">
+	<resultMap id="BaseResultMap" type="cn.huicheng.shop.entities.Orders">
+		<id column="oid" property="oid" jdbcType="INTEGER" />
+		<result column="total" property="total" jdbcType="DOUBLE" />
+		<result column="ordertime" property="ordertime" jdbcType="TIMESTAMP" />
+		<result column="state" property="state" jdbcType="INTEGER" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="phone" property="phone" jdbcType="VARCHAR" />
+		<result column="addr" property="addr" jdbcType="VARCHAR" />
+		<result column="uid" property="uid" jdbcType="INTEGER" />
+	</resultMap>
+
+	<resultMap id="OrdersAndOrderItemsMap" type="cn.huicheng.shop.entities.Orders">
+		<id column="oid" property="oid" jdbcType="INTEGER" />
+		<result column="total" property="total" jdbcType="DOUBLE" />
+		<result column="ordertime" property="ordertime" jdbcType="TIMESTAMP" />
+		<result column="state" property="state" jdbcType="INTEGER" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="phone" property="phone" jdbcType="VARCHAR" />
+		<result column="addr" property="addr" jdbcType="VARCHAR" />
+		<result column="uid" property="uid" jdbcType="INTEGER" />
+		<collection property="orderItems" javaType="java.util.List"
+			ofType="cn.huicheng.shop.entities.OrderItem">
+			<id column="itemid" property="itemid" />
+			<result column="count" property="count" />
+			<result column="subtotal" property="subtotal" />
+			<result column="pid" property="pid" />
+			<association property="product" javaType="cn.huicheng.shop.entities.Product">
+				<id column="pid" property="pid" />
+				<id column="pname" property="pname" />
+				<id column="market_price" property="marketPrice" />
+				<id column="shop_price" property="shopPrice" />
+				<id column="image" property="image" />
+				<id column="pdesc" property="pdesc" />
+				<id column="is_hot" property="isHot" />
+				<id column="pdate" property="pdate" />
+				<id column="csid" property="csid" />
+			</association>
+		</collection>
+	</resultMap>
+
+	<select id="findPageByUid" resultMap="OrdersAndOrderItemsMap">
+		select
+		*
+		from
+		orders o,orderitem oi,product p
+		where
+		o.uid = #{uid} and o.oid = oi.oid and oi.pid = p.pid
+		order by
+		o.ordertime desc
+		limit
+		#{begin},#{limit}
+	</select>
+
+	<select id="findCountByUid" resultType="int" parameterType="int">
+		select count(*) from orders where uid = #{uid}
+	</select>
+
+	<insert id="insertGetId" useGeneratedKeys="true" keyProperty="oid"
+		parameterType="cn.huicheng.shop.entities.Orders">
+		insert into orders 
+			(oid, total, ordertime,state, name, phone,addr, uid)
+		values 
+			(#{oid,jdbcType=INTEGER}, #{total,jdbcType=DOUBLE},
+			#{ordertime,jdbcType=TIMESTAMP},
+			#{state,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR},
+			#{addr,jdbcType=VARCHAR}, #{uid,jdbcType=INTEGER})
+	</insert>
+
+
+	<sql id="Example_Where_Clause">
+		<where>
+			<foreach collection="oredCriteria" item="criteria" separator="or">
+				<if test="criteria.valid">
+					<trim prefix="(" suffix=")" prefixOverrides="and">
+						<foreach collection="criteria.criteria" item="criterion">
+							<choose>
+								<when test="criterion.noValue">
+									and ${criterion.condition}
+								</when>
+								<when test="criterion.singleValue">
+									and ${criterion.condition} #{criterion.value}
+								</when>
+								<when test="criterion.betweenValue">
+									and ${criterion.condition} #{criterion.value} and
+									#{criterion.secondValue}
+								</when>
+								<when test="criterion.listValue">
+									and ${criterion.condition}
+									<foreach collection="criterion.value" item="listItem"
+										open="(" close=")" separator=",">
+										#{listItem}
+									</foreach>
+								</when>
+							</choose>
+						</foreach>
+					</trim>
+				</if>
+			</foreach>
+		</where>
+	</sql>
+	<sql id="Update_By_Example_Where_Clause">
+		<where>
+			<foreach collection="example.oredCriteria" item="criteria"
+				separator="or">
+				<if test="criteria.valid">
+					<trim prefix="(" suffix=")" prefixOverrides="and">
+						<foreach collection="criteria.criteria" item="criterion">
+							<choose>
+								<when test="criterion.noValue">
+									and ${criterion.condition}
+								</when>
+								<when test="criterion.singleValue">
+									and ${criterion.condition} #{criterion.value}
+								</when>
+								<when test="criterion.betweenValue">
+									and ${criterion.condition} #{criterion.value} and
+									#{criterion.secondValue}
+								</when>
+								<when test="criterion.listValue">
+									and ${criterion.condition}
+									<foreach collection="criterion.value" item="listItem"
+										open="(" close=")" separator=",">
+										#{listItem}
+									</foreach>
+								</when>
+							</choose>
+						</foreach>
+					</trim>
+				</if>
+			</foreach>
+		</where>
+	</sql>
+	<sql id="Base_Column_List">
+		oid, total, ordertime, state, name, phone, addr, uid
+	</sql>
+	<select id="selectByExample" resultMap="BaseResultMap"
+		parameterType="cn.huicheng.shop.entities.OrdersExample">
+		select
+		<if test="distinct">
+			distinct
+		</if>
+		<include refid="Base_Column_List" />
+		from orders
+		<if test="_parameter != null">
+			<include refid="Example_Where_Clause" />
+		</if>
+		<if test="orderByClause != null">
+			order by ${orderByClause}
+		</if>
+	</select>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap"
+		parameterType="java.lang.Integer">
+		select
+		<include refid="Base_Column_List" />
+		from orders
+		where oid = #{oid,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from orders
+		where oid = #{oid,jdbcType=INTEGER}
+	</delete>
+	<delete id="deleteByExample" parameterType="cn.huicheng.shop.entities.OrdersExample">
+		delete from orders
+		<if test="_parameter != null">
+			<include refid="Example_Where_Clause" />
+		</if>
+	</delete>
+	<insert id="insert" parameterType="cn.huicheng.shop.entities.Orders">
+		insert into orders (oid, total, ordertime,
+		state, name, phone,
+		addr, uid)
+		values (#{oid,jdbcType=INTEGER}, #{total,jdbcType=DOUBLE},
+		#{ordertime,jdbcType=TIMESTAMP},
+		#{state,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR},
+		#{addr,jdbcType=VARCHAR}, #{uid,jdbcType=INTEGER})
+	</insert>
+	<insert id="insertSelective" parameterType="cn.huicheng.shop.entities.Orders">
+		insert into orders
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="oid != null">
+				oid,
+			</if>
+			<if test="total != null">
+				total,
+			</if>
+			<if test="ordertime != null">
+				ordertime,
+			</if>
+			<if test="state != null">
+				state,
+			</if>
+			<if test="name != null">
+				name,
+			</if>
+			<if test="phone != null">
+				phone,
+			</if>
+			<if test="addr != null">
+				addr,
+			</if>
+			<if test="uid != null">
+				uid,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="oid != null">
+				#{oid,jdbcType=INTEGER},
+			</if>
+			<if test="total != null">
+				#{total,jdbcType=DOUBLE},
+			</if>
+			<if test="ordertime != null">
+				#{ordertime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="state != null">
+				#{state,jdbcType=INTEGER},
+			</if>
+			<if test="name != null">
+				#{name,jdbcType=VARCHAR},
+			</if>
+			<if test="phone != null">
+				#{phone,jdbcType=VARCHAR},
+			</if>
+			<if test="addr != null">
+				#{addr,jdbcType=VARCHAR},
+			</if>
+			<if test="uid != null">
+				#{uid,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	<select id="countByExample" parameterType="cn.huicheng.shop.entities.OrdersExample"
+		resultType="java.lang.Integer">
+		select count(*) from orders
+		<if test="_parameter != null">
+			<include refid="Example_Where_Clause" />
+		</if>
+	</select>
+	<update id="updateByExampleSelective" parameterType="map">
+		update orders
+		<set>
+			<if test="record.oid != null">
+				oid = #{record.oid,jdbcType=INTEGER},
+			</if>
+			<if test="record.total != null">
+				total = #{record.total,jdbcType=DOUBLE},
+			</if>
+			<if test="record.ordertime != null">
+				ordertime = #{record.ordertime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="record.state != null">
+				state = #{record.state,jdbcType=INTEGER},
+			</if>
+			<if test="record.name != null">
+				name = #{record.name,jdbcType=VARCHAR},
+			</if>
+			<if test="record.phone != null">
+				phone = #{record.phone,jdbcType=VARCHAR},
+			</if>
+			<if test="record.addr != null">
+				addr = #{record.addr,jdbcType=VARCHAR},
+			</if>
+			<if test="record.uid != null">
+				uid = #{record.uid,jdbcType=INTEGER},
+			</if>
+		</set>
+		<if test="_parameter != null">
+			<include refid="Update_By_Example_Where_Clause" />
+		</if>
+	</update>
+	<update id="updateByExample" parameterType="map">
+		update orders
+		set oid = #{record.oid,jdbcType=INTEGER},
+		total = #{record.total,jdbcType=DOUBLE},
+		ordertime = #{record.ordertime,jdbcType=TIMESTAMP},
+		state = #{record.state,jdbcType=INTEGER},
+		name = #{record.name,jdbcType=VARCHAR},
+		phone = #{record.phone,jdbcType=VARCHAR},
+		addr = #{record.addr,jdbcType=VARCHAR},
+		uid = #{record.uid,jdbcType=INTEGER}
+		<if test="_parameter != null">
+			<include refid="Update_By_Example_Where_Clause" />
+		</if>
+	</update>
+	<update id="updateByPrimaryKeySelective" parameterType="cn.huicheng.shop.entities.Orders">
+		update orders
+		<set>
+			<if test="total != null">
+				total = #{total,jdbcType=DOUBLE},
+			</if>
+			<if test="ordertime != null">
+				ordertime = #{ordertime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="state != null">
+				state = #{state,jdbcType=INTEGER},
+			</if>
+			<if test="name != null">
+				name = #{name,jdbcType=VARCHAR},
+			</if>
+			<if test="phone != null">
+				phone = #{phone,jdbcType=VARCHAR},
+			</if>
+			<if test="addr != null">
+				addr = #{addr,jdbcType=VARCHAR},
+			</if>
+			<if test="uid != null">
+				uid = #{uid,jdbcType=INTEGER},
+			</if>
+		</set>
+		where oid = #{oid,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="cn.huicheng.shop.entities.Orders">
+		update orders
+		set total = #{total,jdbcType=DOUBLE},
+		ordertime = #{ordertime,jdbcType=TIMESTAMP},
+		state = #{state,jdbcType=INTEGER},
+		name = #{name,jdbcType=VARCHAR},
+		phone = #{phone,jdbcType=VARCHAR},
+		addr = #{addr,jdbcType=VARCHAR},
+		uid = #{uid,jdbcType=INTEGER}
+		where oid = #{oid,jdbcType=INTEGER}
+	</update>
+</mapper>
